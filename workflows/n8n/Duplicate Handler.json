@@ -1,0 +1,138 @@
+{
+  "name": "Duplicate Handler",
+  "nodes": [
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "266f2c2f-5e22-8063-bab4-cd7a88e16dd6",
+          "mode": "list",
+          "cachedResultName": "Job Opportunities",
+          "cachedResultUrl": "https://www.notion.so/266f2c2f5e228063bab4cd7a88e16dd6"
+        },
+        "returnAll": true,
+        "simple": false,
+        "options": {}
+      },
+      "id": "82256b20-c66b-4f59-b0a0-c9c7135a7786",
+      "name": "Get All Jobs",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [
+        208,
+        -16
+      ],
+      "credentials": {
+        "notionApi": {
+          "id": "8VBhytbRHb9bES1k",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Find and group duplicate jobs\nconst items = $input.all();\nconst duplicatesToDelete = [];\nconst jobGroups = new Map();\n\nconsole.log(`Analyzing ${items.length} jobs for duplicates...`);\n\n// Group jobs by different signatures\nfor (const item of items) {\n  const job = item.json;\n  const properties = job.properties;\n  \n  const url = properties[\"Job URL\"]?.url || '';\n  const title = properties.Title?.title?.[0]?.text?.content || '';\n  const company = properties.Company?.rich_text?.[0]?.text?.content || '';\n  const dateFound = properties[\"Date Found\"]?.date?.start || '';\n  const pageId = job.id;\n  \n  const jobData = {\n    pageId,\n    title,\n    company,\n    url,\n    dateFound: new Date(dateFound || '1970-01-01'),\n    originalItem: item\n  };\n  \n  // Create multiple signatures for different types of duplicates\n  const signatures = [];\n  \n  // 1. Exact URL match\n  if (url && url.length > 10) {\n    signatures.push(`url:${url}`);\n  }\n  \n  // 2. Title + Company match (exact)\n  if (title && company) {\n    const titleCompany = `${title.toLowerCase().trim()}|${company.toLowerCase().trim()}`;\n    signatures.push(`tc:${titleCompany}`);\n  }\n  \n  // 3. Fuzzy company + similar title\n  if (title && company && title.length > 5) {\n    const fuzzyTitle = title.toLowerCase().replace(/[^\\w\\s]/g, '').substring(0, 20);\n    const fuzzyCompany = company.toLowerCase().trim();\n    signatures.push(`fuzzy:${fuzzyCompany}|${fuzzyTitle}`);\n  }\n  \n  // Add job to all relevant groups\n  for (const signature of signatures) {\n    if (!jobGroups.has(signature)) {\n      jobGroups.set(signature, []);\n    }\n    jobGroups.get(signature).push(jobData);\n  }\n}\n\nconsole.log(`Created ${jobGroups.size} signature groups`);\n\n// Find duplicates in each group\nlet duplicateGroups = 0;\nlet totalDuplicates = 0;\n\nfor (const [signature, jobs] of jobGroups) {\n  if (jobs.length > 1) {\n    duplicateGroups++;\n    \n    // Remove duplicates within this group (same job added multiple times)\n    const uniqueJobs = [];\n    const seenPageIds = new Set();\n    \n    for (const job of jobs) {\n      if (!seenPageIds.has(job.pageId)) {\n        uniqueJobs.push(job);\n        seenPageIds.add(job.pageId);\n      }\n    }\n    \n    if (uniqueJobs.length > 1) {\n      console.log(`\\nDuplicate group ${duplicateGroups}: ${signature}`);\n      console.log(`${uniqueJobs.length} unique jobs found`);\n      \n      // Sort by date found (oldest first) to keep the oldest\n      uniqueJobs.sort((a, b) => a.dateFound - b.dateFound);\n      \n      // Keep the first (oldest), delete the rest (newer ones)\n      const keepJob = uniqueJobs[0];\n      const deleteJobs = uniqueJobs.slice(1);\n      \n      console.log(`Keeping OLDEST: \"${keepJob.title}\" at ${keepJob.company} (${keepJob.dateFound.toISOString().split('T')[0]}) - ID: ${keepJob.pageId}`);\n      \n      for (const deleteJob of deleteJobs) {\n        console.log(`Marking NEWER for deletion: \"${deleteJob.title}\" at ${deleteJob.company} (${deleteJob.dateFound.toISOString().split('T')[0]}) - ID: ${deleteJob.pageId}`);\n        \n        duplicatesToDelete.push({\n          json: {\n            pageId: deleteJob.pageId,\n            title: deleteJob.title,\n            company: deleteJob.company,\n            url: deleteJob.url,\n            signature: signature,\n            dateFound: deleteJob.dateFound.toISOString().split('T')[0],\n            reason: `Newer duplicate - keeping older version from ${keepJob.dateFound.toISOString().split('T')[0]}`\n          }\n        });\n        totalDuplicates++;\n      }\n    }\n  }\n}\n\nconsole.log(`\\n=== DUPLICATE CLEANUP SUMMARY ===`);\nconsole.log(`Total jobs analyzed: ${items.length}`);\nconsole.log(`Duplicate groups found: ${duplicateGroups}`);\nconsole.log(`NEWER jobs marked for deletion: ${totalDuplicates}`);\nconsole.log(`OLDER jobs remaining after cleanup: ${items.length - totalDuplicates}`);\n\nif (totalDuplicates === 0) {\n  console.log(\"\\nNo duplicates found! Database is clean.\");\n  return [];\n}\n\nconsole.log(`\\nReturning ${duplicatesToDelete.length} newer duplicate items for deletion...`);\nconsole.log(`Sample page ID: ${duplicatesToDelete[0]?.json?.pageId}`);\n\nreturn duplicatesToDelete;"
+      },
+      "id": "083cee8f-e2f8-40d5-848c-89b62246bbea",
+      "name": "Find Duplicates",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        432,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -16,
+        -16
+      ],
+      "id": "a095afc0-69d5-4824-be42-a7d1a7e964de",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "operation": "archive",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.pageId }}",
+          "mode": "id"
+        }
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        656,
+        -16
+      ],
+      "id": "37b7f900-90fb-4b30-80a1-3798c691d780",
+      "name": "Archive page",
+      "credentials": {
+        "notionApi": {
+          "id": "8VBhytbRHb9bES1k",
+          "name": "Notion account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Get All Jobs": {
+      "main": [
+        [
+          {
+            "node": "Find Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Duplicates": {
+      "main": [
+        [
+          {
+            "node": "Archive page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Get All Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Archive page": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "33f01256-8b6f-4ad2-be61-dc44251d2ca4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a826966c11a0f3d04c1b99a8b3c9a773752a1820240013b127e5a98695ed5b61"
+  },
+  "id": "NZzMlmrD4HV0OhMP",
+  "tags": []
+}

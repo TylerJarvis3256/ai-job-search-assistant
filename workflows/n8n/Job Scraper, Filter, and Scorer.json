@@ -1,0 +1,391 @@
+{
+  "name": "Job Scraper, Filter, and Scorer",
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "hour": 5
+            }
+          ]
+        }
+      },
+      "id": "3e97d78c-476d-43ba-88a0-d9f357dfd7da",
+      "name": "Daily Trigger",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        -176,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://remoteok.io/remote-jobs.rss",
+        "options": {}
+      },
+      "id": "7c12457f-8912-41de-bb30-57d8660b9834",
+      "name": "RemoteOK RSS Feed",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [
+        48,
+        160
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "text": "={{ $('RSS Data Transformer').item.json.description.substring(0) }}",
+        "attributes": {
+          "attributes": [
+            {
+              "name": "company",
+              "description": "Based on the job description, extract the company name. "
+            }
+          ]
+        },
+        "options": {
+          "batching": {}
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        496,
+        160
+      ],
+      "id": "ffc0c771-607d-4414-b2ee-8042608e2ff9",
+      "name": "Information Extractor"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "464cd2d1-c042-484c-b5a2-f44ff7dc188d",
+              "name": "title",
+              "value": "={{ $('RSS Data Transformer').item.json.title }}",
+              "type": "string"
+            },
+            {
+              "id": "ca8816ee-700f-4efa-9bef-2caa1d96221e",
+              "name": "company",
+              "value": "={{ $json.output.company }}",
+              "type": "string"
+            },
+            {
+              "id": "786d42b0-0f1e-4fd7-a3cb-697863f53c21",
+              "name": "description",
+              "value": "={{ $('RSS Data Transformer').item.json.description }}",
+              "type": "string"
+            },
+            {
+              "id": "342eb0b2-83f1-4699-8017-809457df7109",
+              "name": "link",
+              "value": "={{ $('RSS Data Transformer').item.json.link }}",
+              "type": "string"
+            },
+            {
+              "id": "c355d572-31dd-4b78-9ee6-8924161bce12",
+              "name": "datePosted",
+              "value": "={{ $('RSS Data Transformer').item.json.datePosted }}",
+              "type": "string"
+            },
+            {
+              "id": "62601eae-c9d4-4b71-89cc-616b1892db20",
+              "name": "location",
+              "value": "={{ $('RSS Data Transformer').item.json.location }}",
+              "type": "string"
+            },
+            {
+              "id": "05f094f6-db26-408e-99d3-21aa3bc2fb71",
+              "name": "salary",
+              "value": "={{ $('RSS Data Transformer').item.json.salary }}",
+              "type": "string"
+            },
+            {
+              "id": "75eec912-d82e-448b-bda0-4a16d9148426",
+              "name": "source",
+              "value": "={{ $('RSS Data Transformer').item.json.source }}",
+              "type": "string"
+            },
+            {
+              "id": "bb96b2e3-3cb7-426b-b8dc-dad0ba941858",
+              "name": "rawId",
+              "value": "={{ $('RSS Data Transformer').item.json.rawId }}",
+              "type": "string"
+            },
+            {
+              "id": "2d3bb0c6-8a87-45d0-8b2a-81f7b49ad16f",
+              "name": "originalTitle",
+              "value": "={{ $('RSS Data Transformer').item.json.originalTitle }}",
+              "type": "string"
+            },
+            {
+              "id": "b3c1b8dc-cc49-4c90-b2b1-f8b31eafbd67",
+              "name": "originalContent",
+              "value": "={{ $('RSS Data Transformer').item.json.originalContent }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        848,
+        160
+      ],
+      "id": "e540e387-d161-4eab-b2c8-98a24b797a7f",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "value": "266f2c2f-5e22-8063-bab4-cd7a88e16dd6",
+          "mode": "list",
+          "cachedResultName": "Job Opportunities",
+          "cachedResultUrl": "https://www.notion.so/266f2c2f5e228063bab4cd7a88e16dd6"
+        },
+        "title": "={{ $('Filter & Score Jobs').item.json.title }}",
+        "simple": false,
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Company|rich_text",
+              "textContent": "={{ $('Filter & Score Jobs').item.json.company !== null ? ($('Filter & Score Jobs').item.json.company) : 'NULL'}}"
+            },
+            {
+              "key": "Match Score|number",
+              "numberValue": "={{ $('Filter & Score Jobs').item.json.matchScore }}"
+            },
+            {
+              "key": "Priority|select",
+              "selectValue": "={{ $json.isHighPriority ? 'High' : ($json.matchScore >= 7 ? 'Medium' : 'Low') }}"
+            },
+            {
+              "key": "Status|select",
+              "selectValue": "New"
+            },
+            {
+              "key": "Job URL|url",
+              "urlValue": "={{ $('Filter & Score Jobs').item.json.link }}"
+            },
+            {
+              "key": "Description|rich_text",
+              "textContent": "={{ $('Filter & Score Jobs').item.json.description.substring(0, 2000) }}"
+            },
+            {
+              "key": "Date Found|date",
+              "includeTime": false,
+              "date": "={{ $now }}"
+            },
+            {
+              "key": "Research Status|select",
+              "selectValue": "Not Started"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1296,
+        160
+      ],
+      "id": "7351b895-282c-4d66-a1ec-aa012b361004",
+      "name": "Create a database page",
+      "credentials": {
+        "notionApi": {
+          "id": "8VBhytbRHb9bES1k",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        568,
+        384
+      ],
+      "id": "33f31240-d314-43fa-a7a9-5bfc45c486c2",
+      "name": "gpt 4.1 mini",
+      "credentials": {
+        "openAiApi": {
+          "id": "s5L1tsnIG3VgSPsH",
+          "name": "AI Job Search Assistant Company Name Classifier"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Job Scoring and Filtering Node\nconst items = $input.all();\nconst filteredJobs = [];\n\n// Tyler's profile for matching\nconst profile = {\n  skills: {\n    required: ['javascript', 'react', 'frontend', 'node', 'web development', 'html', 'css'],\n    preferred: ['typescript', 'next.js', 'python', 'api', 'full-stack', 'backend', 'rest'],\n    databases: ['mysql', 'postgresql', 'mongodb', 'sql'],\n    tools: ['git', 'github', 'rest api', 'express']\n  },\n  experience: ['entry', 'junior', 'new grad', '0-2 years', 'intern', 'internship', 'entry level', 'entry-level'],\n  exclude: ['senior', '5+ years', '4+ years', '3+ years', 'lead', 'principal', 'staff', '7+ years', 'architect', 'mid-level', 'experienced'],\n  dreamCompanies: ['vercel', 'linear', 'notion', 'stripe', 'supabase', 'google', 'microsoft', 'github'],\n  workPreference: ['remote', 'work from home', 'distributed', 'hybrid', '100% remote', 'fully remote']\n};\n\nconsole.log(`Processing ${items.length} jobs from transformer...`);\n\nfor (const item of items) {\n  const job = item.json;\n  \n  // Debug: Check the structure of incoming data\n  console.log(`Processing job: ${job.title} at ${job.company}`);\n  \n  // Safely get text fields and convert to lowercase\n  const title = (job.title || '').toLowerCase();\n  const description = (job.description || '').toLowerCase();\n  const company = (job.company || '').toLowerCase();\n  const location = (job.location || '').toLowerCase();\n  \n  // Combine all text for searching\n  const fullText = `${title} ${description} ${company} ${location}`;\n  \n  // Skip jobs that explicitly exclude entry-level candidates\n  const hasExcludeTerms = profile.exclude.some(term => {\n    const termFound = fullText.includes(term.toLowerCase());\n    if (termFound) {\n      console.log(`Excluding job \"${job.title}\" due to term: ${term}`);\n    }\n    return termFound;\n  });\n  \n  if (hasExcludeTerms) {\n    continue; // Skip this job\n  }\n  \n  // Calculate match score (1-10 scale)\n  let score = 5.0; // baseline\n  \n  // Required skills matching (40% weight)\n  const requiredMatches = profile.skills.required.filter(skill => \n    fullText.includes(skill.toLowerCase())\n  );\n  const requiredScore = (requiredMatches.length / profile.skills.required.length) * 3.0;\n  score += requiredScore;\n  \n  // Preferred skills bonus (20% weight)  \n  const preferredMatches = profile.skills.preferred.filter(skill => \n    fullText.includes(skill.toLowerCase())\n  );\n  const preferredScore = (preferredMatches.length / profile.skills.preferred.length) * 1.5;\n  score += preferredScore;\n  \n  // Database skills bonus\n  const databaseMatches = profile.skills.databases.filter(db => \n    fullText.includes(db.toLowerCase())\n  );\n  if (databaseMatches.length > 0) score += 0.5;\n  \n  // Tools bonus\n  const toolMatches = profile.skills.tools.filter(tool => \n    fullText.includes(tool.toLowerCase())\n  );\n  if (toolMatches.length > 0) score += 0.5;\n  \n  // Experience level alignment (20% weight)\n  const experienceMatch = profile.experience.some(level => \n    fullText.includes(level.toLowerCase())\n  );\n  if (experienceMatch) {\n    score += 1.5;\n    console.log(`Experience bonus for: ${job.title}`);\n  }\n  \n  // Company preference bonus (10% weight)\n  const isDreamCompany = profile.dreamCompanies.some(dreamCo => \n    company.includes(dreamCo.toLowerCase())\n  );\n  if (isDreamCompany) {\n    score += 2.0;\n    console.log(`Dream company bonus for: ${job.company}`);\n  }\n  \n  // Work arrangement bonus (10% weight)\n  const isRemoteFriendly = profile.workPreference.some(pref => \n    fullText.includes(pref.toLowerCase())\n  );\n  if (isRemoteFriendly) score += 1.0;\n  \n  // Startup bonus (smaller companies often more open to juniors)\n  if (fullText.includes('startup') || fullText.includes('small team')) {\n    score += 0.5;\n  }\n  \n  // Tech stack bonus - check for modern tech\n  const modernTech = ['typescript', 'next.js', 'react', 'node.js', 'api', 'docker', 'aws'];\n  const techMatches = modernTech.filter(tech => fullText.includes(tech.toLowerCase()));\n  score += techMatches.length * 0.3;\n  \n  // Penalize if too complex/advanced\n  if (fullText.includes('enterprise') && fullText.includes('complex')) {\n    score -= 0.5;\n  }\n  \n  // Only keep jobs with decent match scores\n  if (score >= 6.0) {\n    const finalScore = Math.round(score * 10) / 10; // Round to 1 decimal\n    \n    const scoredJob = {\n      ...job, // Keep all original fields from transformer\n      matchScore: finalScore,\n      isHighPriority: finalScore >= 8.0,\n      isPriorityCompany: isDreamCompany,\n      hasRequiredSkills: requiredMatches.length >= 2,\n      isRemote: isRemoteFriendly,\n      isEntryLevel: experienceMatch,\n      \n      // Useful for debugging\n      matchedSkills: {\n        required: requiredMatches,\n        preferred: preferredMatches,\n        databases: databaseMatches,\n        tools: toolMatches\n      },\n      \n      // Score breakdown for debugging\n      scoreBreakdown: {\n        base: 5.0,\n        required: requiredScore,\n        preferred: preferredScore,\n        experience: experienceMatch ? 1.5 : 0,\n        company: isDreamCompany ? 2.0 : 0,\n        remote: isRemoteFriendly ? 1.0 : 0,\n        tech: techMatches.length * 0.3,\n        total: finalScore\n      }\n    };\n    \n    filteredJobs.push(scoredJob);\n    console.log(`Added job: ${job.title} (Score: ${finalScore})`);\n  } else {\n    console.log(`Filtered out: ${job.title} (Score: ${Math.round(score * 10) / 10})`);\n  }\n}\n\n// Sort by match score (highest first)\nfilteredJobs.sort((a, b) => b.matchScore - a.matchScore);\n\n// Limit to top 25 jobs per day to avoid overwhelming Notion\nconst topJobs = filteredJobs.slice(0, 25);\n\nconsole.log(`Final result: ${topJobs.length} jobs passed filtering`);\nif (topJobs.length > 0) {\n  console.log(`Top job: ${topJobs[0]?.title} (${topJobs[0]?.matchScore})`);\n}\n\nreturn topJobs.map(job => ({ json: job }));"
+      },
+      "id": "399cc69f-4a88-48ac-9f54-4ed277636510",
+      "name": "Filter & Score Jobs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1072,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// RSS Data Transformer - Comprehensive HTML/XML cleaning with content cleaning\nconst items = $input.all();\nconst transformedJobs = [];\n\nfor (const item of items) {\n  const rawData = item.json;\n\n  \n  // Comprehensive text cleaning function - removes HTML and fixes encoding\n  const cleanText = (text) => {\n    if (!text) return '';\n    \n    return text\n      // First, decode HTML entities\n      .replace(/&nbsp;/g, ' ')\n      .replace(/&amp;/g, '&')\n      .replace(/&lt;/g, '<')\n      .replace(/&gt;/g, '>')\n      .replace(/&quot;/g, '\"')\n      .replace(/&#39;/g, \"'\")\n      .replace(/&apos;/g, \"'\")\n      \n      // Remove HTML/XML tags completely\n      .replace(/<[^>]*>/g, ' ')\n      \n      // Fix common encoding issues\n      .replace(/â€™/g, \"'\")  // Smart apostrophe\n      .replace(/â€œ/g, '\"')  // Smart quote open\n      .replace(/â€/g, '\"')   // Smart quote close\n      .replace(/â€\"/g, '-')   // Em dash\n      .replace(/â€\"/g, '-')   // En dash\n      .replace(/â€¢/g, '•')   // Bullet\n      .replace(/â€¦/g, '...')  // Ellipsis\n      .replace(/Â/g, '')      // Non-breaking space artifacts\n      \n      // Alternative encoding patterns\n      .replace(/â/g, \"'\")\n      .replace(/â/g, \"-\")\n      .replace(/â/g, '\"')\n      .replace(/â/g, '\"')\n      .replace(/â¢/g, '•')\n      .replace(/â¦/g, '...')\n      \n      // Clean up whitespace and formatting\n      .replace(/\\n+/g, ' ')        // newlines to spaces\n      .replace(/\\r+/g, ' ')        // carriage returns to spaces\n      .replace(/\\t+/g, ' ')        // tabs to spaces\n      .replace(/\\s+/g, ' ')        // multiple spaces to single\n      \n      // Remove any remaining non-printable characters\n      .replace(/[^\\x20-\\x7E\\u00A0-\\u00FF]/g, '')\n      \n      .trim();\n  };\n  \n  // Clean and format content - additional formatting for descriptions\n  const cleanContent = (content) => {\n    if (!content) return '';\n    \n    // First apply basic cleaning\n    const cleaned = cleanText(content);\n    \n    // Then add extra formatting cleanup\n    return cleaned\n      .replace(/\\s+/g, ' ')           // Normalize all whitespace to single spaces\n      .replace(/\\t+/g, ' ')           // Replace any remaining tabs\n      .replace(/\\n+/g, ' ')           // Replace any remaining newlines\n      .replace(/\\r+/g, ' ')           // Replace any remaining carriage returns\n      .replace(/\\s*[-–—]\\s*/g, ' - ') // Normalize dashes with proper spacing\n      .replace(/\\s*:\\s*/g, ': ')      // Normalize colons with proper spacing\n      .replace(/\\s*;\\s*/g, '; ')      // Normalize semicolons with proper spacing\n      .replace(/\\s*,\\s*/g, ', ')      // Normalize commas with proper spacing\n      .replace(/\\s*\\.\\s*/g, '. ')     // Normalize periods with proper spacing\n      .replace(/\\s+/g, ' ')           // Final normalization of multiple spaces\n      .trim();\n  };\n  \n  // Enhanced company extraction\n  const extractCompany = (title, content) => {\n    const cleanTitle = cleanText(title);\n    const cleanContentText = cleanContent(content);\n    \n    // Try multiple patterns to extract company name\n    const patterns = [\n      /At\\s+([A-Z][a-zA-Z\\s&.,-]+),/i,\n      /We're\\s+([A-Z][a-zA-Z\\s&.,-]+)/i,\n      /join\\s+([A-Z][a-zA-Z\\s&.,-]+)['s]*\\s+/i,\n      /([A-Z][a-zA-Z\\s&.,-]+),\\s+we\\s+(build|are|develop)/i,\n      /Company:\\s*([A-Z][a-zA-Z\\s&.,-]+)/i,\n      /working\\s+at\\s+([A-Z][a-zA-Z\\s&.,-]+)/i\n    ];\n    \n    for (const pattern of patterns) {\n      const match = cleanContentText.match(pattern);\n      if (match && match[1] && match[1].length > 1 && match[1].length < 50) {\n        return match[1].trim().replace(/[,.]$/, ''); // Remove trailing punctuation\n      }\n    }\n    \n    // Extract from URL if possible (for RemoteOK)\n    if (rawData.link && rawData.link.includes('remoteok.com')) {\n      const urlMatch = rawData.link.match(/-([a-zA-Z]+)-\\d+$/);\n      if (urlMatch && urlMatch[1].length > 2) {\n        return urlMatch[1].charAt(0).toUpperCase() + urlMatch[1].slice(1);\n      }\n    }\n    \n    return 'Unknown Company';\n  };\n  \n  // Clean and extract job title\n  const cleanTitle = (title) => {\n    const cleaned = cleanText(title);\n    \n    return cleaned\n      .replace(/\\s*[-–—]\\s*[^-]*$/, '') // Remove company suffix after dash\n      .replace(/\\s*\\|\\s*[^|]*$/, '')   // Remove company suffix after pipe\n      .replace(/\\s*at\\s+[^-]*$/i, '')  // Remove \"at Company\" suffix\n      .trim();\n  };\n  \n  // Extract location with better patterns\n  const extractLocation = (content) => {\n    const cleanContentText = cleanContent(content);\n    \n    const locationPatterns = [\n      /Location:\\s*([^\\n\\r,.]+)/i,\n      /Based in:\\s*([^\\n\\r,.]+)/i,\n      /Work from:\\s*([^\\n\\r,.]+)/i,\n      /(100%\\s*remote)/i,\n      /(fully\\s*remote)/i,\n      /(remote[\\s-]friendly)/i\n    ];\n    \n    for (const pattern of locationPatterns) {\n      const match = cleanContentText.match(pattern);\n      if (match && match[1]) {\n        return match[1].trim();\n      }\n    }\n    \n    // Check if remote is mentioned anywhere\n    if (cleanContentText.toLowerCase().includes('remote')) {\n      return 'Remote';\n    }\n    \n    return 'Not specified';\n  };\n  \n  // Extract salary information\n  const extractSalary = (content) => {\n    const cleanContentText = cleanContent(content);\n    \n    const salaryPatterns = [\n      /\\$\\s*[\\d,]+(?:\\s*[-–—]\\s*\\$?\\s*[\\d,]+)?/g,\n      /€\\s*[\\d,]+(?:\\s*[-–—]\\s*€?\\s*[\\d,]+)?/g,\n      /£\\s*[\\d,]+(?:\\s*[-–—]\\s*£?\\s*[\\d,]+)?/g,\n      /Salary:\\s*([^\\n\\r]+)/i,\n      /Compensation:\\s*([^\\n\\r]+)/i\n    ];\n    \n    for (const pattern of salaryPatterns) {\n      const match = cleanContentText.match(pattern);\n      if (match && match[0]) {\n        return match[0].trim();\n      }\n    }\n    \n    return null;\n  };\n  \n  // Create clean, structured description (truncated)\n  const createDescription = (content) => {\n    const cleaned = cleanContent(content); // Use the dedicated content cleaner\n    \n    return cleaned;\n  };\n  \n  // Create standardized job object\n  const transformedJob = {\n    title: cleanTitle(rawData.title || ''),\n    company: extractCompany(rawData.title || '', rawData.contentSnippet || rawData.content || ''),\n    description: createDescription(rawData.contentSnippet || rawData.content || ''),\n    link: rawData.link || '',\n    datePosted: rawData.isoDate || rawData.pubDate || new Date().toISOString(),\n    location: extractLocation(rawData.contentSnippet || rawData.content || ''),\n    salary: extractSalary(rawData.contentSnippet || rawData.content || ''),\n    source: 'RemoteOK', // Change this for different feeds: 'Indeed', 'RemoteOK', etc.\n    rawId: rawData.guid || rawData.id || '',\n    \n    // Minimal debug info (cleaned and truncated)\n    originalTitle: cleanText(rawData.title || ''),\n    originalContent: cleanContent((rawData.contentSnippet || '').substring(0, 200)) + '...'\n  };\n  \n  transformedJobs.push({ json: transformedJob });\n}\n\nreturn transformedJobs;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        272,
+        160
+      ],
+      "id": "fdd8fc69-d243-4e0b-b379-4bbc642ea34f",
+      "name": "RSS Data Transformer"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "NZzMlmrD4HV0OhMP",
+          "mode": "list",
+          "cachedResultName": "Deduplication Workflow"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1520,
+        160
+      ],
+      "id": "97010bed-7066-467d-a6ae-c727b998d2ca",
+      "name": "Execute Workflow"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Daily Trigger": {
+      "main": [
+        [
+          {
+            "node": "RemoteOK RSS Feed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RemoteOK RSS Feed": {
+      "main": [
+        [
+          {
+            "node": "RSS Data Transformer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Information Extractor": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Filter & Score Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a database page": {
+      "main": [
+        [
+          {
+            "node": "Execute Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gpt 4.1 mini": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter & Score Jobs": {
+      "main": [
+        [
+          {
+            "node": "Create a database page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Data Transformer": {
+      "main": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "285da167-cef7-4976-a0a5-51fb6daed5fc",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a826966c11a0f3d04c1b99a8b3c9a773752a1820240013b127e5a98695ed5b61"
+  },
+  "id": "q9LOQqsf4Jr2vrci",
+  "tags": []
+}
