@@ -7,7 +7,7 @@
 [![AI](https://img.shields.io/badge/AI-Claude%20%2B%20OpenAI-blue)]()
 [![Database](https://img.shields.io/badge/Database-Notion-000000)]()
 
-## 🎯 **Project Overview**
+## **Project Overview**
 
 This system automates the entire job search process from discovery to application, designed to showcase automation expertise while solving real-world job search challenges. Built for Computer Science students and recent graduates seeking internships and entry-level positions.
 
@@ -18,7 +18,7 @@ This system automates the entire job search process from discovery to applicatio
 - **Database Management**: Notion-based job tracking and status updates
 - **Infrastructure**: Self-hosted n8n on DigitalOcean with Docker
 
-## 🏗️ **System Architecture**
+##  **System Architecture**
 
 ```
 Daily Trigger → Job Discovery → AI Analysis → Resume Generation → PDF Creation → Cloud Storage
@@ -35,40 +35,40 @@ Daily Trigger → Job Discovery → AI Analysis → Resume Generation → PDF Cr
 - **Infrastructure**: Docker, DigitalOcean VPS
 - **Monitoring**: n8n built-in logging + custom alerts
 
-## 📊 **Key Features**
+## **Key Features**
 
-### ✅ **Automated Job Discovery**
+### **Automated Job Discovery**
 - **Smart Filtering**: Processes high-priority jobs from Notion database
 - **Duplicate Prevention**: Built-in deduplication logic
 - **Quality Control**: Match score-based prioritization
 - **Daily Limits**: Configurable processing limits (current: 5 resumes/day)
 
-### ✅ **AI-Powered Resume Tailoring** 
+### **AI-Powered Resume Tailoring** 
 - **Job Analysis**: Extracts key requirements and preferred technologies
 - **Dynamic Content**: Tailors summary, skills, and project descriptions
 - **Multiple Formats**: Markdown → HTML → PDF pipeline
 - **ATS Optimization**: Clean formatting, keyword integration
 - **Version Control**: Systematic naming convention
 
-### ✅ **Professional PDF Generation**
+### **Professional PDF Generation**
 - **High Quality**: 300 DPI, Letter size, proper margins
 - **Print-Ready**: Professional formatting with consistent styling
 - **Dynamic Naming**: `Tyler_Jarvis_Resume_Company_Position_2025.pdf`
 - **Fast Processing**: <30 seconds per resume generation
 
-### ✅ **Cloud Storage Integration**
+### **Cloud Storage Integration**
 - **Google Drive**: Organized in dedicated Resumes folder
 - **Access Control**: Secure OAuth2 authentication
 - **File Management**: Automatic organization and duplicate handling
 - **Backup**: Cloud-based storage with version history
 
-### ✅ **Comprehensive Tracking**
+### **Comprehensive Tracking**
 - **Notion Database**: Complete job application pipeline tracking
 - **Status Management**: From "Not Generated" → "Resume Generated" → "Applied"
 - **Metadata**: File sizes, generation dates, match scores
 - **Analytics**: Processing metrics and success rates
 
-## 🔧 **Installation & Setup**
+## **Installation & Setup**
 
 ### **Prerequisites**
 - n8n instance (self-hosted or cloud)
@@ -110,7 +110,7 @@ Daily Trigger → Job Discovery → AI Analysis → Resume Generation → PDF Cr
    # Verify files appear in Google Drive
    ```
 
-## 📋 **Notion Database Schema**
+## **Notion Database Schema**
 
 ### **Required Properties**
 | Property | Type | Purpose |
@@ -131,7 +131,7 @@ Daily Trigger → Job Discovery → AI Analysis → Resume Generation → PDF Cr
 | File Size | Number | System |
 | Processing Notes | Rich Text | AI Analysis |
 
-## 🤖 **AI Integration Details**
+## **AI Integration Details**
 
 ### **Resume Tailoring Process**
 1. **Job Analysis**: Extract role type, required skills, experience level
@@ -151,7 +151,7 @@ Daily Trigger → Job Discovery → AI Analysis → Resume Generation → PDF Cr
 - **Efficient Prompts**: Streamlined prompts to minimize token usage
 - **Current Usage**: ~$15-20/month for 150+ resumes
 
-## 📈 **Performance Metrics**
+## **Performance Metrics**
 
 ### **Current Production Stats**
 - **Processing Speed**: 2-3 minutes per complete job→resume→PDF pipeline
@@ -166,7 +166,7 @@ Daily Trigger → Job Discovery → AI Analysis → Resume Generation → PDF Cr
 - **Recovery**: Automatic retries for transient failures
 - **Monitoring**: Real-time logs and execution tracking
 
-## 🗂️ **Project Structure**
+##  **Project Structure**
 
 ```
 ai-job-search-assistant/
@@ -185,7 +185,7 @@ ai-job-search-assistant/
 └── CHANGELOG.md                       # Version history and updates
 ```
 
-## 🚀 **Upcoming Features**
+## **Upcoming Features**
 
 ### **Phase 2: Enhanced Intelligence**
 - [ ] Company research automation with web scraping
@@ -205,7 +205,7 @@ ai-job-search-assistant/
 - [ ] Success metric dashboard
 - [ ] ROI analysis and recommendations
 
-## 💡 **Technical Highlights**
+## **Technical Highlights**
 
 ### **Automation Excellence**
 - **Zero Manual Intervention**: Fully automated daily operation
@@ -225,7 +225,7 @@ ai-job-search-assistant/
 - **Secure**: API key management and secure credential storage
 - **Maintainable**: Clear separation of concerns and modular design
 
-## 🏆 **Project Impact**
+## **Project Impact**
 
 ### **Personal Development**
 - **Portfolio Showcase**: Demonstrates end-to-end automation expertise
@@ -245,7 +245,7 @@ ai-job-search-assistant/
 - **API Integration**: Multiple third-party service coordination
 - **System Design**: Scalable, maintainable system architecture
 
-## 🔧 **Contributing**
+## **Contributing**
 
 This project is primarily for personal use and portfolio demonstration, but feedback and suggestions are welcome:
 
@@ -253,7 +253,7 @@ This project is primarily for personal use and portfolio demonstration, but feed
 2. **Documentation**: Help improve setup guides and troubleshooting
 3. **Extensions**: Ideas for additional features or integrations
 
-## 📞 **Contact**
+## **Contact**
 
 **Tyler Jarvis**  
 - **Email**: tylerjarvis3256@gmail.com
