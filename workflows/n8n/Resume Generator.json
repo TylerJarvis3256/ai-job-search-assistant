@@ -1,0 +1,513 @@
+{
+  "name": "Resume Generator",
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "hour": 7
+            }
+          ]
+        }
+      },
+      "id": "e092ad30-e898-498a-bee8-b65352aaa297",
+      "name": "Daily Resume Trigger",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        32,
+        48
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "266f2c2f-5e22-8063-bab4-cd7a88e16dd6",
+          "mode": "list",
+          "cachedResultName": "Job Opportunities",
+          "cachedResultUrl": "https://www.notion.so/266f2c2f5e228063bab4cd7a88e16dd6"
+        },
+        "returnAll": true,
+        "simple": false,
+        "filterType": "manual",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "key": "Priority|select",
+              "condition": "equals",
+              "selectValue": "High"
+            },
+            {
+              "key": "Resume Status|select",
+              "condition": "equals",
+              "selectValue": "Not Generated"
+            }
+          ]
+        },
+        "options": {
+          "sort": {
+            "sortValue": [
+              {
+                "key": "Match Score|number",
+                "direction": "descending"
+              }
+            ]
+          }
+        }
+      },
+      "id": "0720316c-7e07-40a1-8e31-28a8393faccb",
+      "name": "Get High Match Jobs",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [
+        256,
+        48
+      ],
+      "credentials": {
+        "notionApi": {
+          "id": "8VBhytbRHb9bES1k",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Lightweight Job Analysis for Resume Tailoring\nconst items = $input.all();\nconst analyzedJobs = [];\n\n// Tyler's base resume data\nconst tylerProfile = {\n  name: \"Tyler Jarvis\",\n  contact: {\n    phone: \"(949) 677-3256\",\n    email: \"tylerjarvis3256@gmail.com\",\n    linkedin: \"https://www.linkedin.com/in/TylerJarvis3256/\",\n    github: \"https://github.com/TylerJarvis3256\"\n  },\n  education: {\n    degree: \"B.S. Computer Science\",\n    school: \"Arizona State University\",\n    graduation: \"Expected May 2026\",\n    gpa: \"3.30 GPA\"\n  },\n  skills: {\n    programming: [\"JavaScript\", \"Python\", \"Java\", \"C#\", \"C++\"],\n    frontend: [\"React.js\", \"Sass\", \"JavaFX\", \"HTML\", \"CSS\", \"Material-UI\"],\n    backend: [\"Node.js\", \"Express.js\", \"REST APIs\", \"MySQL\", \"NoSQL\", \"Git\", \"GitHub\"],\n    cloud: [\"Netlify\", \"Bluehost\", \"Heroku\"],\n    systems: [\"Windows\", \"Linux\", \"MacOS\"]\n  },\n  projects: [\n    {\n      name: \"Admin Dashboard\",\n      date: \"December 2024\",\n      tech: [\"React.js\", \"Material-UI\", \"Recharts\"],\n      description: \"Developed a responsive admin dashboard leveraging React.js, Material-UI, and Recharts for dynamic data visualization.\",\n      bullets: [\n        \"Developed a responsive admin dashboard leveraging React.js, Material-UI, and Recharts for dynamic data visualization.\",\n        \"Designed and implemented reusable, modular components for enhanced scalability and cross-device responsiveness.\",\n        \"Integrated interactive charts and grids, enabling real-time visualization of placeholder datasets.\"\n      ],\n      github: \"https://github.com/TylerJarvis3256/AdminDashboard\"\n    },\n    {\n      name: \"AI Company Research Tool\",\n      date: \"December 2024\",\n      tech: [\"Python\", \"Streamlit\", \"OpenAI API\"],\n      description: \"Engineered a Streamlit-based application using Python and OpenAI API to automate comprehensive company research.\",\n      bullets: [\n        \"Engineered a Streamlit-based application using Python and OpenAI API to automate comprehensive company research.\",\n        \"Implemented seamless CSV input/output workflows to optimize client data analysis and reporting.\",\n        \"Utilized OpenAI API to generate detailed industry insights, enabling growth opportunity identification for clients.\"\n      ],\n      github: \"https://github.com/TylerJarvis3256/AICompanyResearcher\"\n    },\n    {\n      name: \"Movie Search Application\",\n      date: \"September 2024\",\n      tech: [\"React.js\", \"OMDB API\"],\n      description: \"Built a React.js-based movie search platform integrated with the OMDB API for user-friendly browsing.\",\n      bullets: [\n        \"Built a React.js-based movie search platform integrated with the OMDB API for user-friendly browsing.\",\n        \"Designed dynamic API calls for real-time search results and responsive layouts for optimal usability on all devices.\",\n        \"Showcased seamless UI/UX features, including instant updates, clean design, and cross-platform compatibility.\"\n      ],\n      github: \"https://github.com/TylerJarvis3256/movie-search-app\"\n    }\n  ]\n};\n\nconsole.log(`Analyzing ${items.length} high-match jobs for resume tailoring...`);\n\nfor (const item of items) {\n  const job = item.json;\n  const properties = job.properties;\n  \n  const title = properties.Title?.title?.[0]?.text?.content || '';\n  const company = properties.Company?.rich_text?.[0]?.text?.content || '';\n  const description = properties.Description?.rich_text?.[0]?.text?.content || '';\n  const matchScore = properties['Match Score']?.number || 0;\n  const jobUrl = properties['Job URL']?.url || '';\n  const pageId = job.id;\n  \n  // Quick analysis of job requirements\n  const jobAnalysis = analyzeJobRequirements(title, description, company);\n  \n  analyzedJobs.push({\n    json: {\n      pageId,\n      title,\n      company,\n      description: description.substring(0, 1000), // Truncate for processing\n      matchScore,\n      jobUrl,\n      jobAnalysis,\n      tylerProfile,\n      \n      // Key tailoring data\n      primaryRole: jobAnalysis.roleType,\n      keySkills: jobAnalysis.requiredSkills,\n      preferredTech: jobAnalysis.preferredTech,\n      experienceLevel: jobAnalysis.experienceLevel\n    }\n  });\n}\n\nfunction analyzeJobRequirements(title, description, company) {\n  const text = `${title} ${description} ${company}`.toLowerCase();\n  \n  // Determine primary role type\n  let roleType = 'Full-Stack';\n  if (text.includes('frontend') || text.includes('front-end') || text.includes('ui') || text.includes('ux')) {\n    roleType = 'Frontend';\n  } else if (text.includes('backend') || text.includes('back-end') || text.includes('api') || text.includes('server')) {\n    roleType = 'Backend';\n  } else if (text.includes('automation') || text.includes('devops') || text.includes('infrastructure')) {\n    roleType = 'Automation';\n  }\n  \n  // Extract required skills\n  const skillPatterns = {\n    'React': /react/gi,\n    'JavaScript': /javascript|js(?!on)/gi,\n    'TypeScript': /typescript|ts(?!$)/gi,\n    'Node.js': /node\\.?js|nodejs/gi,\n    'Python': /python/gi,\n    'Next.js': /next\\.?js|nextjs/gi,\n    'Material-UI': /material.?ui|mui/gi,\n    'REST API': /rest|api/gi,\n    'MySQL': /mysql/gi,\n    'PostgreSQL': /postgresql|postgres/gi,\n    'Git': /git(?!hub)/gi,\n    'GitHub': /github/gi\n  };\n  \n  const requiredSkills = [];\n  const preferredTech = [];\n  \n  for (const [skill, pattern] of Object.entries(skillPatterns)) {\n    if (pattern.test(text)) {\n      if (['React', 'JavaScript', 'Node.js', 'Python'].includes(skill)) {\n        requiredSkills.push(skill);\n      } else {\n        preferredTech.push(skill);\n      }\n    }\n  }\n  \n  // Determine experience level expectation\n  let experienceLevel = 'Entry';\n  if (text.includes('senior') || text.includes('lead') || text.includes('principal')) {\n    experienceLevel = 'Senior';\n  } else if (text.includes('mid') || text.includes('intermediate') || text.includes('2+') || text.includes('3+')) {\n    experienceLevel = 'Mid';\n  }\n  \n  // Company size indicator\n  let companyType = 'Unknown';\n  if (text.includes('startup') || text.includes('early stage')) {\n    companyType = 'Startup';\n  } else if (text.includes('enterprise') || text.includes('fortune')) {\n    companyType = 'Enterprise';\n  }\n  \n  return {\n    roleType,\n    requiredSkills,\n    preferredTech,\n    experienceLevel,\n    companyType,\n    isRemote: /remote|work from home|distributed/gi.test(text),\n    hasInternship: /intern|internship|co.?op/gi.test(text)\n  };\n}\n\nconsole.log(`Analyzed ${analyzedJobs.length} jobs for resume tailoring`);\nreturn analyzedJobs;"
+      },
+      "id": "a874b435-f415-4a5c-8017-bd5e70b565e3",
+      "name": "Analyze Jobs for Tailoring",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        48
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Fixed Process Generated Resumes and Prepare Storage\nconst items = $input.all();\nconst processedResumes = [];\n\nconsole.log(`Processing ${items.length} generated resumes...`);\n\nfor (const item of items) {\n  const itemData = item.json;\n  \n  // Debug: Log the structure to understand what we're getting\n  console.log(`Item structure:`, Object.keys(itemData));\n  \n  // The Claude response comes in the 'text' field based on your output\n  const generatedResume = itemData.text || itemData.output || itemData.response || '';\n  \n  // Get job data from the previous node (should be in the item)\n  const jobTitle = itemData.title || $('Analyze Jobs for Tailoring').item.json.title || 'Unknown Position';\n  const company = itemData.company || $('Analyze Jobs for Tailoring').item.json.company || 'Unknown Company';\n  const pageId = itemData.pageId || $('Analyze Jobs for Tailoring').item.json.pageId || '';\n  const primaryRole = itemData.primaryRole || $('Analyze Jobs for Tailoring').item.json.primaryRole || 'General';\n  const keySkills = itemData.keySkills || $('Analyze Jobs for Tailoring').item.json.keySkills || [];\n  const matchScore = itemData.matchScore || $('Analyze Jobs for Tailoring').item.json.matchScore || 0;\n  \n  console.log(`Processing resume for: ${jobTitle} at ${company}`);\n  \n  // Clean and format the resume\n  const cleanResume = cleanResumeContent(generatedResume);\n  \n  // Generate resume metadata with safe fallbacks\n  const resumeMetadata = {\n    jobTitle: jobTitle,\n    company: company,\n    roleType: primaryRole,\n    keySkills: Array.isArray(keySkills) ? keySkills : [],\n    generatedDate: new Date().toISOString().split('T')[0],\n    matchScore: matchScore,\n    resumeVersion: generateResumeVersion(primaryRole, company),\n    wordCount: cleanResume.split(' ').filter(word => word.length > 0).length,\n    filename: `Tyler_Jarvis_Resume_${sanitizeFilename(company)}_${sanitizeFilename(jobTitle)}.md`\n  };\n  \n  processedResumes.push({\n    json: {\n      pageId: pageId,\n      jobTitle: jobTitle,\n      company: company,\n      resumeContent: cleanResume,\n      resumeMetadata: resumeMetadata,\n      \n      // For Notion updates\n      resumeVersion: resumeMetadata.resumeVersion,\n      generatedDate: resumeMetadata.generatedDate,\n      filename: resumeMetadata.filename,\n      wordCount: resumeMetadata.wordCount,\n      tailoringNotes: `Tailored for ${primaryRole} role emphasizing ${resumeMetadata.keySkills.slice(0, 2).join(' and ')}`\n    }\n  });\n}\n\nfunction cleanResumeContent(content) {\n  if (!content) return '';\n  \n  // Remove markdown code blocks if present\n  let cleaned = content.replace(/```markdown\\s*|```\\s*/g, '');\n  \n  // Normalize line endings\n  cleaned = cleaned.replace(/\\r\\n/g, '\\n').replace(/\\r/g, '\\n');\n  \n  // Clean up multiple consecutive newlines\n  cleaned = cleaned.replace(/\\n{3,}/g, '\\n\\n');\n  \n  // Trim whitespace\n  cleaned = cleaned.trim();\n  \n  return cleaned;\n}\n\nfunction generateResumeVersion(roleType, company) {\n  // Safe fallbacks for undefined values\n  const safeRoleType = roleType || 'GEN';\n  const safeCompany = company || 'UNKNOWN';\n  \n  const roleAbbr = {\n    'Frontend': 'FE',\n    'Backend': 'BE', \n    'Full-Stack': 'FS',\n    'Automation': 'AUTO'\n  }[safeRoleType] || 'GEN';\n  \n  const companyAbbr = safeCompany.substring(0, 4).toUpperCase().replace(/[^A-Z]/g, '') || 'UNKN';\n  const date = new Date().toISOString().split('T')[0].replace(/-/g, '');\n  \n  return `${roleAbbr}_${companyAbbr}_${date}`;\n}\n\nfunction sanitizeFilename(text) {\n  if (!text) return 'Unknown';\n  \n  return text\n    .replace(/[^a-zA-Z0-9\\s]/g, '') // Remove special characters\n    .replace(/\\s+/g, '_') // Replace spaces with underscores\n    .substring(0, 20); // Limit length\n}\n\nconsole.log(`Successfully processed ${processedResumes.length} tailored resumes`);\nreturn processedResumes;"
+      },
+      "id": "6f2ef6f1-66b9-44a1-8e3a-fc490f60259a",
+      "name": "Process Generated Resumes",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1504,
+        -80
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "958512ee-2114-42f5-b693-fa30a3bf40aa",
+      "name": "Limit Daily Resumes",
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        704,
+        48
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a professional resume writer specializing in tech roles. Create a tailored resume for Tyler Jarvis.\n\n## JOB CONTEXT\n**Position**: {{ $json.title }}\n**Company**: {{ $json.company }}\n**Role Type**: {{ $json.primaryRole }}\n**Key Skills**: {{ $json.keySkills.join(', ') }}\n**Preferred Tech**: {{ $json.preferredTech.join(', ') }}\n**Experience Level**: {{ $json.experienceLevel }}\n**Match Score**: {{ $json.matchScore }}/10\n\n## TYLER'S BASE PROFILE\n{{ JSON.stringify($json.tylerProfile, null, 2) }}\n\n## TAILORING REQUIREMENTS\n\n### Resume Structure (Keep to 1 page):\n1. **Header** - Name, contact info (unchanged)\n2. **Summary** - 3 bullet points tailored to this role\n3. **Education** - Standard format (unchanged)\n4. **Technical Skills** - Reorganized to highlight relevant skills first\n5. **Projects** - Reorder and modify bullets to emphasize relevant tech\n6. **Experience** - Keep existing work experience as-is\n\n### Tailoring Strategy:\n- **Summary**: Lead with the #1 required skill, emphasize role type ({{ $json.primaryRole }})\n- **Skills**: Put most relevant skills first, group logically\n- **Projects**: Reorder by relevance, modify bullets to highlight matching technologies\n- **Keywords**: Naturally integrate job-specific terms for ATS optimization\n\n### Guidelines:\n- Maintain all technical accuracy and specific achievements\n- Keep existing metrics and GitHub links\n- Use action verbs and quantifiable results\n- Ensure ATS-friendly formatting (no graphics, consistent structure)\n- Professional tone appropriate for {{ $json.experienceLevel }} level roles\n\n## OUTPUT FORMAT\nReturn the complete tailored resume in clean markdown format:\n\n```markdown\n# Tyler Jarvis\n(949) 677-3256 | tylerjarvis3256@gmail.com  \nhttps://www.linkedin.com/in/TylerJarvis3256/ | https://github.com/TylerJarvis3256\n\n## SUMMARY\n• [Tailored bullet point 1 emphasizing primary role type and top required skill]\n• [Tailored bullet point 2 highlighting relevant experience and projects]\n• [Tailored bullet point 3 focusing on internship goals and company fit]\n\n## EDUCATION\nB.S. COMPUTER SCIENCE - Expected May 2026  \nARIZONA STATE UNIVERSITY - 3.30 GPA\n\n## TECHNICAL SKILLS\n**Programming Languages**: [Reordered based on job requirements]  \n**[Role-Specific Category]**: [Relevant frameworks/tools first]  \n**[Additional Categories]**: [Other relevant skills]  \n**Cloud & Deployment**: [Keep existing]  \n**Operating Systems**: Windows, Linux, MacOS\n\n## RELEVANT PROJECTS\n\n### [Most Relevant Project Name], Personal Project [Date]\nGitHub Link\n• [Modified bullet emphasizing relevant technologies]\n• [Modified bullet highlighting applicable skills]\n• [Modified bullet showing business impact or technical depth]\n\n### [Second Most Relevant Project], Personal Project [Date]\nGitHub Link\n• [Tailored bullets following same pattern]\n\n### [Third Project], Personal Project [Date]\nGitHub Link\n• [Tailored bullets]\n\n\nFocus on creating a compelling, relevant resume that showcases Tyler's strongest alignment with this specific role.",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        1152,
+        -80
+      ],
+      "id": "dee00986-6771-4dd6-b4c2-0d047b7376f2",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1232,
+        144
+      ],
+      "id": "4731a15b-b305-4019-95f7-37d01dc3bea3",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "68bnZWQ9SOxb1BAe",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "html": "{{ $json.htmlContent }}"
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        1952,
+        -80
+      ],
+      "id": "a27bdb7f-696d-4ca1-8326-d38b7f09a134",
+      "name": "HTML"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Convert Resume to Professional HTML with Compact Formatting\nconst items = $input.all();\nconst htmlResults = [];\n\nfor (const item of items) {\n  const resumeContent = item.json.resumeContent;\n  const company = item.json.company || 'Company';\n  const jobTitle = item.json.jobTitle || 'Position';\n  \n  // Professional HTML template with compact CSS\n  const htmlContent = `<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Tyler Jarvis Resume - ${company}</title>\n    <style>\n        @page {\n            size: letter;\n            margin: 0.5in;\n        }\n        \n        body {\n            font-family: 'Times New Roman', serif;\n            font-size: 9.5pt;\n            line-height: 1;\n            color: #000;\n            max-width: 10.5in;\n            margin: auto;\n            background: white;\n        }\n        \n        h1 {\n            font-size: 14pt;\n            font-weight: bold;\n            text-align: center;\n            margin: 0 0 3pt 0;\n            letter-spacing: 0.3pt;\n        }\n        \n        .contact-info {\n            text-align: center;\n            font-size: 8.5pt;\n            margin: 0 auto 5pt auto; \n            line-height: 1.0;\n        }\n        \n        .social-links {\n            text-align: center;\n            font-size: 8.5pt;\n            margin-bottom: 5pt;\n        }\n        \n        .social-links a {\n            color: #0066cc;\n            text-decoration: none;\n            font-weight: 500;\n        }\n        \n        .social-links a:hover {\n            text-decoration: underline;\n        }\n        \n        h2 {\n            font-size: 10pt;\n            font-weight: bold;\n            margin: 6pt 0 2pt 0;\n            border-bottom: 0.8pt solid #000;\n            padding-bottom: 0.5pt;\n            text-transform: uppercase;\n            letter-spacing: 0.2pt;\n        }\n        \n        h3 {\n            font-size: 9.5pt;\n            font-weight: bold;\n            margin: 4pt 0 1pt 0;\n            font-style: italic;\n        }\n        \n        ul {\n            margin: 0;\n            padding-left: 12pt;\n        }\n        \n        li {\n            margin-bottom: 0pt;\n            text-align: justify;\n        }\n        \n        p {\n            margin: 1pt 0;\n            text-align: justify;\n        }\n        \n        strong, b {\n            font-weight: bold;\n        }\n        \n        em, i {\n            font-style: italic;\n        }\n        \n        .skills {\n            margin-bottom: 3pt;\n        }\n        \n        .project-header {\n            display: flex;\n            justify-content: space-between;\n            align-items: baseline;\n            margin-top: 4pt;\n        }\n        \n        .project-date {\n            font-style: italic;\n            font-size: 8.5pt;\n        }\n        \n        .project-link {\n            font-size: 8pt;\n            margin: 2pt 0 3pt 0;\n        }\n        \n        .project-link a {\n            color: #0066cc;\n            text-decoration: none;\n            font-weight: 500;\n        }\n        \n        .project-link a:hover {\n            text-decoration: underline;\n        }\n        \n        /* Print optimizations */\n        @media print {\n            body { font-size: 9pt; }\n            h1 { font-size: 13pt; }\n            h2 { font-size: 9.5pt; page-break-after: avoid; }\n            h3 { page-break-after: avoid; }\n            .project-header { page-break-after: avoid; }\n            ul { page-break-inside: avoid; }\n            .social-links a, .project-link a { \n                color: #0066cc; \n                text-decoration: none; \n            }\n        }\n    </style>\n</head>\n<body>\n    ${convertMarkdownToHTML(resumeContent)}\n</body>\n</html>`;\n  \n  htmlResults.push({\n    json: {\n      ...item.json,\n      htmlContent: htmlContent,\n      htmlFilename: `Tyler_Jarvis_Resume_${sanitizeFilename(company)}_${sanitizeFilename(jobTitle)}.html`,\n      pdfFilename: `Tyler_Jarvis_Resume_${sanitizeFilename(company)}_${sanitizeFilename(jobTitle)}.pdf`\n    }\n  });\n}\n\nfunction convertMarkdownToHTML(markdown) {\n  if (!markdown) return '';\n  \n  let html = markdown\n    // Convert headers\n    .replace(/^# (.+$)/gim, '<h1>$1</h1>')\n    .replace(/^## (.+$)/gim, '<h2>$1</h2>')\n    .replace(/^### (.+$)/gim, '<h3>$1</h3>')\n    \n    // Convert contact info (phone and email only)\n    .replace(/\\(\\d{3}\\)\\s\\d{3}-\\d{4}\\s\\|\\s([^\\n|]+)/g, '<div class=\"contact-info\">$&</div>')\n    \n    // Convert LinkedIn and GitHub links to styled links on one line\n    .replace(/(https:\\/\\/www\\.linkedin\\.com\\/in\\/[^\\s]+)\\s*\\|\\s*(https:\\/\\/github\\.com\\/[^\\s]+)/g, \n      '<div class=\"social-links\"><a href=\"$1\">linkedin.com/in/TylerJarvis3256</a> | <a href=\"$2\">github.com/TylerJarvis3256</a></div>')\n    \n    // Remove markdown link brackets around GitHub URLs\n    .replace(/\\[(https:\\/\\/github\\.com\\/TylerJarvis3256\\/[^\\]]+)\\]\\([^)]+\\)/g, '$1')\n    \n    // Convert project GitHub links BEFORE converting line breaks\n    .replace(/(https:\\/\\/github\\.com\\/TylerJarvis3256\\/[^\\s]+)/g, \n      '<div class=\"project-link\"><a href=\"$1\">$1</a></div>')\n    \n    // Convert bold and italic\n    .replace(/\\*\\*(.+?)\\*\\*/g, '<strong>$1</strong>')\n    .replace(/\\*(.+?)\\*/g, '<em>$1</em>')\n    \n    // Convert bullet points\n    .replace(/^• (.+$)/gim, '<li>$1</li>')\n    \n    // Convert line breaks\n    .replace(/\\n\\n/g, '<p><p>')\n    .replace(/\\n/g, '<br>');\n  \n  // Remove <br> tags immediately after h2 headers\n  html = html.replace(/<\\/h2><br>/g, '</h2>');\n\n  // Remove <br> tags before and after project links\n  html = html.replace(/<br><div class=\"project-link\">/g, '<div class=\"project-link\">')\n  html = html.replace(/<\\/a><\\/div>\\s*<br>/g, '</a></div>');\n  \n  // Group consecutive list items into single <ul> tags (this fixes the spacing issue)\n  html = html.replace(/(<li>.*?<\\/li>)(\\s*<br>\\s*<li>.*?<\\/li>)*/gs, function(match) {\n    // Remove <br> tags between list items and wrap all in one <ul>\n    const cleanedMatch = match.replace(/<br>\\s*/g, '');\n    return '<ul>' + cleanedMatch + '</ul>';\n  });\n  \n  // Wrap text in paragraphs\n  html = '<p>' + html + '</p>';\n  \n  // Clean up empty paragraphs and formatting artifacts\n  html = html.replace(/<p>\\s*<\\/p>/g, '');\n  \n  return html;\n}\n\nfunction sanitizeFilename(text) {\n  if (!text) return 'Unknown';\n  return text.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 15);\n}\n\nconsole.log(`Generated HTML for ${htmlResults.length} resumes`);\nreturn htmlResults;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1728,
+        -80
+      ],
+      "id": "0a079dd2-837d-421a-8198-3e7292ab7bb7",
+      "name": "Convert Markdown to HTML"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Generate resume title for display\nconst companyName = $json.company || $('Convert Markdown to HTML').first().json.company || null;\nconst jobTitle = $json.title || $('Convert Markdown to HTML').first().json.title || null;\nconst candidateName = 'Tyler Jarvis';\nlet resumeTitle;\nif (companyName && companyName.trim()) {\n  resumeTitle = `${candidateName} - ${companyName.trim()} Resume`;\n} else if (jobTitle && jobTitle.trim()) {\n  resumeTitle = `${candidateName} - ${jobTitle.trim()} Resume`;\n} else {\n  resumeTitle = `${candidateName} - Resume`;\n}\n\n// Return properly formatted data for Google Drive upload\nreturn {\n  json: {\n    // Keep existing data\n    ...($json || {}),\n    // Add metadata\n    resume_title: resumeTitle,\n   \n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2176,
+        -80
+      ],
+      "id": "6f32b601-6067-43fa-a65a-6ca7950ce49b",
+      "name": "File Name Generator"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        928,
+        48
+      ],
+      "id": "fc58da58-0716-4c05-974d-63ab9977c0a6",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.pdflayer.com/api/convert?access_key=bc0dc129bfbb0e195df1d3c5df46ea16",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/x-www-form-urlencoded"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "document_html",
+              "value": "={{ $json.html }}"
+            },
+            {
+              "name": "page_size",
+              "value": "letter"
+            },
+            {
+              "name": "orientation",
+              "value": "portrait"
+            }
+          ]
+        },
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 60000
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2400,
+        -80
+      ],
+      "id": "9f4fb67b-aaaf-42a9-814f-0757c31a5d1d",
+      "name": "Generate PDF"
+    },
+    {
+      "parameters": {
+        "name": "={{ $('File Name Generator').item.json.resume_title }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1_XlRCGG-8HJrfx1xZwKkTLkUo8zybKsl",
+          "mode": "list",
+          "cachedResultName": "Resumes",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1_XlRCGG-8HJrfx1xZwKkTLkUo8zybKsl"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2624,
+        -80
+      ],
+      "id": "58109309-a90b-45e1-8de4-7dfbaa2c151a",
+      "name": "Upload Resume",
+      "executeOnce": false,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "jJJTlrfXrj8AHJAs",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Get High Match Jobs').item.json.id }}",
+          "mode": "id"
+        },
+        "simple": false,
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Resume File (View)|url",
+              "urlValue": "={{ $json.webViewLink }}"
+            },
+            {
+              "key": "Resume File (Download) |url",
+              "urlValue": "={{ $json.webContentLink }}"
+            },
+            {
+              "key": "Research Status|select",
+              "selectValue": "Complete"
+            },
+            {
+              "key": "Resume Word Count|number",
+              "numberValue": "={{ $('Convert Markdown to HTML').item.json.resumeMetadata.wordCount }}"
+            },
+            {
+              "key": "Resume Generated Date|date",
+              "includeTime": false,
+              "date": "=2025-09-10T00:21:13"
+            },
+            {
+              "key": "Tailoring Notes|rich_text",
+              "textContent": "={{ $('Convert Markdown to HTML').item.json.tailoringNotes }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        2848,
+        48
+      ],
+      "id": "791776fd-de3e-4597-acd2-0202f37f6859",
+      "name": "Add Resume To Notion",
+      "credentials": {
+        "notionApi": {
+          "id": "8VBhytbRHb9bES1k",
+          "name": "Notion account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Daily Resume Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get High Match Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get High Match Jobs": {
+      "main": [
+        [
+          {
+            "node": "Analyze Jobs for Tailoring",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze Jobs for Tailoring": {
+      "main": [
+        [
+          {
+            "node": "Limit Daily Resumes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Generated Resumes": {
+      "main": [
+        [
+          {
+            "node": "Convert Markdown to HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit Daily Resumes": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Process Generated Resumes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML": {
+      "main": [
+        [
+          {
+            "node": "File Name Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert Markdown to HTML": {
+      "main": [
+        [
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "File Name Generator": {
+      "main": [
+        [
+          {
+            "node": "Generate PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate PDF": {
+      "main": [
+        [
+          {
+            "node": "Upload Resume",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Resume": {
+      "main": [
+        [
+          {
+            "node": "Add Resume To Notion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Resume To Notion": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "259bf39d-5352-41a5-bda9-90b7af3a3482",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a826966c11a0f3d04c1b99a8b3c9a773752a1820240013b127e5a98695ed5b61"
+  },
+  "id": "fqdT4tCLCUAI68Sa",
+  "tags": []
+}
